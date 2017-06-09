@@ -166,7 +166,7 @@ static void BtnHitHurt(void);       // Generate sound: Hit/Hurt
 static void BtnJump(void);          // Generate sound: Jump
 static void BtnBlipSelect(void);    // Generate sound: Blip/Select
 static void BtnRandomize(void);     // Generate random sound
-static void BtnMutate(void);;       // Mutate current sound
+static void BtnMutate(void);        // Mutate current sound
 
 static void BtnLoadSound(void);     // Load sound parameters file
 static void BtnSaveSound(void);     // Save sound parameters file
@@ -1116,6 +1116,8 @@ static WaveParams LoadSoundParams(const char *fileName)
     if (strcmp(GetExtension(fileName),"sfs") == 0)
     {
         FILE *file = fopen(fileName, "rb");
+        if (file == NULL)
+            return params;
 
         // Load .sfs sound parameters
         int version = 0;
@@ -1175,6 +1177,8 @@ static WaveParams LoadSoundParams(const char *fileName)
     else if (strcmp(GetExtension(fileName),"rfx") == 0)
     {
         FILE *rfxFile = fopen(fileName, "rb");
+        if (rfxFile == NULL)
+            return;
 
         // Load .rfx sound parameters
         unsigned char signature[4];
@@ -1241,6 +1245,8 @@ static void SaveSoundParams(const char *fileName, WaveParams params)
     if (strcmp(GetExtension(fileName),"sfs") == 0)
     {
         FILE *sfsFile = fopen(fileName, "wb");
+        if (sfsFile == NULL)
+            return;
 
         // Save .sfs sound parameters
         int version = 102;
@@ -1290,6 +1296,8 @@ static void SaveSoundParams(const char *fileName, WaveParams params)
     else if (strcmp(GetExtension(fileName),"rfx") == 0)
     {
         FILE *rfxFile = fopen(fileName, "wb");
+        if (rfxFile == NULL)
+            return;
 
         // Save .rfx sound parameters
         unsigned char signature[4] = "rFX ";
@@ -1431,6 +1439,8 @@ static void SaveWAV(const char *fileName, Wave wave)
     waveData.subChunkSize = wave.sampleCount*wave.channels*wave.sampleSize/8;
 
     FILE *wavFile = fopen(fileName, "wb");
+    if (wavFile == NULL)
+        return;
 
     fwrite(&riffHeader, 1, sizeof(RiffHeader), wavFile);
     fwrite(&waveFormat, 1, sizeof(WaveFormat), wavFile);
