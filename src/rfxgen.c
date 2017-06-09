@@ -172,6 +172,10 @@ static void BtnLoadSound(void);     // Load sound parameters file
 static void BtnSaveSound(void);     // Save sound parameters file
 static void BtnExportWav(Wave wave); // Export current sound as .wav
 
+static void OpenLink(const char* url);
+static bool DrawTextLink(const char *text, const char *url, int posX, int posY, int fontSize, Color defaultColor, Color hoverColor);
+static bool DrawRectangleLink(const char *url, int posX, int posY, int width, int height, Color defaultColor, Color hoverColor);
+
 //------------------------------------------------------------------------------------
 // Program main entry point
 //------------------------------------------------------------------------------------
@@ -723,19 +727,18 @@ int main(int argc, char *argv[])
             DrawText(FormatText("|   Wave size: %i bytes", wave.sampleCount*wavSampleSize/8), 355, 486, 10, DARKGRAY);
 
             // Adverts
-            DrawText("based on sfxr by", 16, 235, 10, GRAY);
-            DrawText("Tomas Pettersson", 13, 248, 10, GRAY);
+            DrawTextLink("based on sfxr by\nTomas Pettersson", "http://www.drpetter.se/project_sfxr.html", 16, 235, 10, GRAY, BLUE);
 
             DrawLine(13, 268, 105, 268, GuiLinesColor());
 
-            DrawText("www/github.com/\nraysan5/raygui", 18, 280, 10, GRAY);
-            DrawText("www/github.com/\nraysan5/raylib", 18, 318, 10, GRAY);
+            DrawTextLink("www.github.com/\nraysan5/raygui", "https://www.github.com/raysan5/raygui", 18, 280, 10, GRAY, BLUE);
+            DrawTextLink("www.github.com/\nraysan5/raylib", "https://www.github.com/raysan5/raylib", 18, 318, 10, GRAY, BLUE);
             DrawText("powered by", 394, 149, 10, DARKGRAY);
-            DrawRectangle(394, 162, 92, 92, BLACK);
+            bool isMouseOver = DrawRectangleLink("http://www.raylib.com/", 394, 162, 92, 92, BLACK, BLACK);
             DrawRectangle(400, 168, 80, 80, RAYWHITE);
-            DrawText("raylib", 419, 223, 20, BLACK);
+            DrawText("raylib", 419, 223, 20, isMouseOver ? BLUE : BLACK);
 
-            DrawText("@raysan5", 421, 21, 10, GRAY);
+            DrawTextLink("@raysan5", "https://twitter.com/raysan5", 421, 21, 10, GRAY, BLUE);
             DrawTexture(texTwitter, 400, 18, Fade(BLACK, 0.4f));
 
             //DrawRectangleRec((Rectangle){ 243, 48, 102, 362 }, Fade(RED, 0.2f));
@@ -1821,4 +1824,63 @@ static const char *GetExtension(const char *fileName)
     const char *dot = strrchr(fileName, '.');
     if (!dot || dot == fileName) return "";
     return (dot + 1);
+}
+
+static void OpenLink (const char *url)
+{
+    // max length is "explorer ".length + url.maxlength (which is 2083), but let's round that
+    static char cmd[4096];
+
+    strcpy(cmd, "explorer ");
+    strcat(cmd, url);
+    system(cmd);
+
+    memset(cmd, 0, 4096);
+}
+
+static bool DrawTextLink(const char *text, const char *url, int posX, int posY, int fontSize, Color defaultColor, Color hoverColor)
+{
+    static SpriteFont defaultSpriteFont = { { 0, 0, 0, 0, 0 }, 0, 0, NULL };
+    if (defaultSpriteFont.texture.id == 0)
+    {
+        defaultSpriteFont = GetDefaultFont();
+    }
+
+    float scaleFactor = fontSize / defaultSpriteFont.baseSize;
+	
+    Rectangle rec = { posX, posY, MeasureText(text, fontSize), fontSize };
+
+    for (const char *p = text; *p; p++)
+    {
+        if (*p == '\n')
+        {
+            rec.height += (int)((defaultSpriteFont.baseSize + (defaultSpriteFont.baseSize / 2)) * scaleFactor);
+        }
+    }
+
+    bool isMouseOver = (CheckCollisionPointRec(GetMousePosition(), rec));
+
+    if ((isMouseOver) && (IsMouseButtonReleased(MOUSE_LEFT_BUTTON)))
+    {
+        OpenLink(url);
+    }
+
+    DrawText(text, posX, posY, fontSize, isMouseOver ? hoverColor : defaultColor);
+
+    return isMouseOver;
+}
+
+static bool DrawRectangleLink(const char *url, int posX, int posY, int width, int height, Color defaultColor, Color hoverColor)
+{
+    const Rectangle rec = { posX, posY, width, height };
+    const bool isMouseOver = (CheckCollisionPointRec(GetMousePosition(), rec));
+
+    if ((isMouseOver) && (IsMouseButtonReleased(MOUSE_LEFT_BUTTON)))
+    {
+        OpenLink(url);
+    }
+
+    DrawRectangle(posX, posY, width, height, isMouseOver ? hoverColor : defaultColor);
+
+    return isMouseOver;
 }
